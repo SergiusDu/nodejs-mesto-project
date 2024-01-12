@@ -1,41 +1,50 @@
-    "env": {
-        "es2021": true,
-        "node": true
-    },
-    "extends": [
-        "airbnb-base"
+{
+  "root": true,
+  "env": {
+    "node": true
+  },
+  "extends": [
+    "airbnb-base"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "settings": {
+    "ignorePatterns": [
+      "/src/components/",
+      "/src/contexts/",
+      "/src/index.js",
+      "src/serviceWorker.js",
+      "/src/utils/"
     ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
+    "import/resolver": {
+      "node": {
+        "extensions": [
+          ".ts",
+          ".js",
+          ".json"
+        ]
+      }
     },
-    "plugins": [
-        "@typescript-eslint"
+    "import/extensions": [
+      ".js",
+      ".ts"
+    ]
+  },
+  "rules": {
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "ts": "never"
+      }
     ],
-    "settings": {
-        "import/resolver": {
-            "node": {
-                "extensions": [
-                    ".ts",
-                    ".js",
-                    ".json"
-                ]
-            }
-        },
-        "import/extensions": [
-            ".js",
-            ".ts"
-        ]
-    },
-    "rules": {
-        "import/extensions": [
-            "error",
-            "ignorePackages",
-            {
-                "js": "never",
-                "ts": "never"
-            }
-        ]
-    },
+    "no-underscore-dangle": ["error", { "allow": ["_id"] }]
+  }
 }
