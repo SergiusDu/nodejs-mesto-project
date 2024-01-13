@@ -18,10 +18,9 @@ async function connectDb() {
   if (!mongoDbUrl) {
     console.error('Ошибка: URL подключения к MongoDB не предоставлен.'
       + ' Укажите MONGODB_URI в .env');
-    process.exit(1);
   }
   try {
-    const dbConnection = await mongoose.connect(mongoDbUrl);
+    const dbConnection = await mongoose.connect(mongoDbUrl || 'mongodb://localhost:27017/mestodb');
     console.log(`MongoDB подключен к: ${dbConnection.connection.host}`);
   } catch (error) {
     if (error instanceof Error) {
@@ -35,7 +34,6 @@ async function connectDb() {
     } else {
       console.error('Превышено максимальное количество попыток подключения к'
         + ' MongoDB.');
-      process.exit(1);
     }
   }
 }
