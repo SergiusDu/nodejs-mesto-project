@@ -16,11 +16,11 @@
   ],
   "settings": {
     "ignorePatterns": [
-      "/src/components/",
-      "/src/contexts/",
+      "/src/components",
+      "/src/contexts",
       "/src/index.js",
       "src/serviceWorker.js",
-      "/src/utils/"
+      "/src/utils"
     ],
     "import/resolver": {
       "node": {
@@ -37,6 +37,7 @@
     ]
   },
   "rules": {
+    "no-console": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
