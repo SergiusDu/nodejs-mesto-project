@@ -1,6 +1,6 @@
 import winston from 'winston';
 import expressWinston from 'express-winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
+import 'winston-daily-rotate-file';
 /**
  * Создаёт логгер запросов для приложения Express.
  *
@@ -8,13 +8,11 @@ import DailyRotateFile from 'winston-daily-rotate-file';
  * Файлы лога создаются каждый день и сохраняются в течение 14 дней.
  * Каждый файл лога имеет максимальный размер 20 мегабайт и архивируется.
  */
+const LOG_DIRECTORY = 'logs';
 export const requestLogger = expressWinston.logger({
   transports: [
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    }),
     new winston.transports.DailyRotateFile({
-      filename: 'requests-%DATE%.log',
+      filename: `${LOG_DIRECTORY}/requests-%DATE%.log`,
       datePattern: 'MM-DD-YYYY',
       zippedArchive: true,
       maxSize: '20m',
@@ -34,7 +32,7 @@ export const requestLogger = expressWinston.logger({
 export const errorLogger = expressWinston.errorLogger({
   transports: [
     new winston.transports.DailyRotateFile({
-      filename: 'error.log',
+      filename: `${LOG_DIRECTORY}/error-%DATE%.log`,
       datePattern: 'MM-DD-YYYY',
       zippedArchive: true,
       maxSize: '20m',
