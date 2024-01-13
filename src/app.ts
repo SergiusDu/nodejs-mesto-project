@@ -25,6 +25,6 @@ app.use(errorLogger);
 app.use(errorHandler);
 app.use(errors());
 
-app.listen(port, () => {
+app.listen(3000, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
