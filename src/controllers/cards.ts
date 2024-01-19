@@ -7,7 +7,7 @@ export const getCards = async (
   next: NextFunction,
 ) => {
   try {
-    const cards = await cardsModel.find({}, {}, { limit: 10 });
+    const cards = await cardsModel.find({}, {});
     res.send({ data: cards });
   } catch (error) {
     next(error);
@@ -20,8 +20,8 @@ export const createCard = async (
   next: NextFunction,
 ) => {
   try {
-    await cardsModel.create(req.body);
-    res.send(req.body);
+    const createdCard = await cardsModel.create({ ...req.body, owner: req.user?._id });
+    res.send(createdCard);
   } catch (error) {
     next(error);
   }
@@ -34,14 +34,12 @@ export const deleteCard = async (
 ) => {
   try {
     const cardId = req.params?.cardId;
-    if (!cardId) {
-      next(new Error('There is no ID in request'));
+    const deleteResults = await cardsModel.deleteOne({ _id: cardId });
+    if (deleteResults.deletedCount < 1) {
+      res.status(404).send('Карточка с указанным _id не найдена.');
+      return;
     }
-    const response = await cardsModel.deleteOne({ _id: cardId });
-    if (response.deletedCount > 0) {
-      res.send('Card has been deleted');
-    }
-    next(new Error('There is no card with this ID'));
+    res.send('Карточка была удалена');
   } catch (error) {
     next(error);
   }
@@ -77,9 +75,11 @@ export const deleteLikeFromCard = async (
       next(new Error('Пользователь не авторизован'));
       return;
     }
-    const updatedCard = await cardsModel.findByIdAndUpdate(req.params.cardId, {
+    const { cardId } = req.params;
+    await cardsModel.findByIdAndUpdate(cardId, {
       $pull: { likes: req.user._id },
     });
+    const updatedCard = await cardsModel.findById(cardId);
     res.send(updatedCard);
   } catch (error) {
     next(error);
