@@ -6,6 +6,7 @@ import connectDb from './db/database';
 import userRouter from './routes/users';
 import sanitizeRequestBody from './middlewares/sanitizeRequestBody';
 import errorHandler from './middlewares/errorHandler';
+import cards from './routes/cards';
 
 dotenv.config();
 // TODO Fix port issue
@@ -20,10 +21,12 @@ app.get('/', (_: Request, res: Response) => {
   res.send('Hello from Server');
 });
 app.use('/users', userRouter);
+app.use('/cards', cards);
 
 app.use(errorLogger);
 app.use(errorHandler);
 app.use(errors());
+console.log(Date.now());
 app.listen(3000, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
