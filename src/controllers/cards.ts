@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import Types from 'mongoose';
 import cardsModel from '../models/card';
 
 export const getCards = async (
@@ -47,15 +46,9 @@ export const deleteCard = async (
     next(error);
   }
 };
-interface IUser {
-  _id: Types.ObjectId
-}
 
-interface RequestWithUser extends Request {
-  user?: IUser
-}
 export const addLikeToCard = async (
-  req: RequestWithUser,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -75,7 +68,7 @@ export const addLikeToCard = async (
   }
 };
 export const deleteLikeFromCard = async (
-  req: RequestWithUser,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
