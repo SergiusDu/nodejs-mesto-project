@@ -1,10 +1,6 @@
 import { Schema, Model, model } from 'mongoose';
+import { IUser } from '../types/types';
 
-interface IUser {
-  name: string;
-  about: string;
-  avatar: string;
-}
 interface IUserModel extends Model<IUser> {
   createUser(): void;
 }

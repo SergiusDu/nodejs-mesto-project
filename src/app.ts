@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 import { errors } from 'celebrate';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import connectDb from './db/database';
-import userRouter from './routes/users';
+import userRouter from './routes/userRouter';
 import sanitizeRequestBody from './middlewares/sanitizeRequestBody';
 import errorHandler from './middlewares/errorHandler';
-import cards from './routes/cards';
+import cardRouter from './routes/cardRouter';
 import fakeAuthorization from './middlewares/fakeAuthorization';
 
 dotenv.config();
@@ -23,12 +23,11 @@ app.get('/', (_: Request, res: Response) => {
 });
 app.use('/', fakeAuthorization);
 app.use('/users', userRouter);
-app.use('/cards', cards);
+app.use('/cards', cardRouter);
 
 app.use(errorLogger);
 app.use(errorHandler);
 app.use(errors());
-console.log(Date.now());
 app.listen(3000, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
