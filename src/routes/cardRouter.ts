@@ -7,24 +7,24 @@ import {
   getCards,
 } from '../controllers/cards';
 
-const cards = Router();
+const cardRouter = Router();
 
-cards.post('/', celebrate({
+cardRouter.post('/', celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
     link: Joi.string().uri().required(),
     createAt: Joi.date().required(),
   }),
 }), createCard);
-cards.get('/', getCards);
-cards.delete('/:cardId', celebrate(
+cardRouter.get('/', getCards);
+cardRouter.delete('/:cardId', celebrate(
   {
     [Segments.PARAMS]: Joi.object().keys({
       cardId: Joi.string().required(),
     }),
   },
 ), deleteCard);
-cards.put('/:cardId/likes', celebrate(
+cardRouter.put('/:cardId/likes', celebrate(
   {
     [Segments.PARAMS]: Joi.object().keys({
       cardId: Joi.string().required(),
@@ -38,7 +38,7 @@ cards.put('/:cardId/likes', celebrate(
     ),
   },
 ), addLikeToCard);
-cards.delete('/:cardId/likes', celebrate(
+cardRouter.delete('/:cardId/likes', celebrate(
   {
     [Segments.PARAMS]: Joi.object().keys({
       cardId: Joi.string().required(),
@@ -52,4 +52,4 @@ cards.delete('/:cardId/likes', celebrate(
     ),
   },
 ), deleteLikeFromCard);
-export default cards;
+export default cardRouter;
