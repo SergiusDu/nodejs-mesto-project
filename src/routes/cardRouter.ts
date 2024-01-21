@@ -8,7 +8,7 @@ import {
 } from '../controllers/cards';
 
 const cardRouter = Router();
-
+// TODO Доделать валидацию url
 cardRouter.post('/', celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
