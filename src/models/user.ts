@@ -1,5 +1,8 @@
 import { Schema, Model, model } from 'mongoose';
+import isEmail from 'validator/lib/isEmail';
+import { isURL } from 'validator';
 import { IUser } from '../types/types';
+import { URL_REGEXP } from '../constants/common';
 
 interface IUserModel extends Model<IUser> {
   createUser(): void;
@@ -7,6 +10,22 @@ interface IUserModel extends Model<IUser> {
 
 const UserScheme = new Schema<IUser, IUserModel>(
   {
+    email: {
+      type: String,
+      minlength: 3,
+      maxlength: 30,
+      required: true,
+      unique: true,
+      index: true,
+      validate(input: string) {
+        return isEmail(input);
+      },
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
     name: {
       type: String,
       minlength: 2,
@@ -22,6 +41,9 @@ const UserScheme = new Schema<IUser, IUserModel>(
     avatar: {
       type: String,
       required: true,
+      validate(input: string) {
+        return isURL(input) && URL_REGEXP.test(input);
+      },
     },
   },
 );

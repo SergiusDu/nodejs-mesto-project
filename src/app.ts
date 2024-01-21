@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { errors } from 'celebrate';
+import cookieParser from 'cookie-parser';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import connectDb from './db/database';
 import userRouter from './routes/userRouter';
@@ -14,6 +15,7 @@ dotenv.config();
 const port = process.env.PORT ?? 3000;
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(sanitizeRequestBody);
 app.use(requestLogger);
 

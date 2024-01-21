@@ -1,17 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
 import { constants as errorConstants } from 'http2';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import userModel from '../models/user';
 import { IUser } from '../types/types';
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { name, about, avatar } = req.body;
-    await userModel.create({
+    const {
+      email, password, name, about, avatar,
+    } = req.body;
+    const createdUser = await userModel.create({
+      email,
+      password: await bcrypt.hash(password, 10),
       name,
       about,
       avatar,
     });
-    res.send({ message: 'Пользователь успешно создан' });
+    res.send(createdUser);
   } catch (error) {
     if (error instanceof Error) {
       console.error(`Ошибка создания пользователя: ${error.message}`);
@@ -61,6 +67,23 @@ export const modifyUser = async (req: Request, res: Response, next: NextFunction
       { new: true },
     );
     res.send(updatedProfile);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email, password } = req.body;
+    const existedUser = await userModel.findOne({ email }).select('+password');
+    if (!existedUser) return next(new Error('Пользователь не найден'));
+    const passwordMatch = await bcrypt.compare(password, existedUser.password);
+    if (!passwordMatch) return next(new Error('Неверный пароль'));
+    const token = jwt.sign({ userId: existedUser._id }, existedUser.password, { expiresIn: 3600 });
+    res.cookie('jwt', token, {
+      maxAge: 3600000,
+      httpOnly: true,
+    }).send({ token });
   } catch (error) {
     next(error);
   }
