@@ -4,7 +4,9 @@
     "node": true
   },
   "extends": [
-    "airbnb-base"
+    "airbnb-base",
+    "eslint:recommended",
+    "plugin:jest/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -12,7 +14,8 @@
     "sourceType": "module"
   },
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "jest"
   ],
   "settings": {
     "ignorePatterns": [
@@ -20,7 +23,7 @@
       "/src/contexts",
       "/src/index.js",
       "src/serviceWorker.js",
-      "/src/utils"
+      "/src/utils/api.js"
     ],
     "import/resolver": {
       "node": {
@@ -46,6 +49,6 @@
         "ts": "never"
       }
     ],
-    "no-underscore-dangle": ["error", { "allow": ["_id"] }]
+    "no-underscore-dangle": ["error", { "allow": ["_id", "__v"] }]
   }
 }

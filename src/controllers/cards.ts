@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import cardsModel from '../models/card';
+import { RequestWithJwt } from '../types/user';
+import { isValidJwsUserSignature } from '../utils/validation/user';
 
 export const getCards = async (
   req: Request,
@@ -15,15 +17,16 @@ export const getCards = async (
 };
 
 export const createCard = async (
-  req: Request,
+  req: RequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
   try {
+    if (!isValidJwsUserSignature(req)) return next(new Error('Необходима авторизация'));
     const createdCard = await cardsModel.create({ ...req.body, owner: req.user?._id });
-    res.send(createdCard);
+    return res.send(createdCard);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };
 
@@ -46,7 +49,7 @@ export const deleteCard = async (
 };
 
 export const addLikeToCard = async (
-  req: Request,
+  req: RequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
@@ -66,7 +69,7 @@ export const addLikeToCard = async (
   }
 };
 export const deleteLikeFromCard = async (
-  req: Request,
+  req: RequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {

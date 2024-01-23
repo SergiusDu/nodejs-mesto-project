@@ -1,8 +1,8 @@
 import { Schema, Model, model } from 'mongoose';
 import isEmail from 'validator/lib/isEmail';
 import { isURL } from 'validator';
-import { IUser } from '../types/types';
 import { URL_REGEXP } from '../constants/common';
+import { IUser } from '../types/user';
 
 interface IUserModel extends Model<IUser> {
   createUser(): void;

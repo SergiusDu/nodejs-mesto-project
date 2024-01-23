@@ -1,29 +1,29 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import { errors } from 'celebrate';
 import cookieParser from 'cookie-parser';
-import { requestLogger, errorLogger } from './middlewares/logger';
+import { errorLogger, requestLogger } from './middlewares/logger';
 import connectDb from './db/database';
-import userRouter from './routes/userRouter';
+import userRouter from './routes/user-router';
 import sanitizeRequestBody from './middlewares/sanitizeRequestBody';
 import errorHandler from './middlewares/errorHandler';
-import cardRouter from './routes/cardRouter';
-import fakeAuthorization from './middlewares/fakeAuthorization';
+import cardRouter from './routes/card-router';
+import auth from './middlewares/auth';
+import userAuthRouter from './routes/user-auth-router';
 
 dotenv.config();
 // TODO Fix port issue
 const port = process.env.PORT ?? 3000;
-const app = express();
+connectDb();
+export const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(sanitizeRequestBody);
 app.use(requestLogger);
 
-connectDb();
-app.get('/', (_: Request, res: Response) => {
-  res.send('Hello from Server');
-});
-app.use('/', fakeAuthorization);
+app.use(userAuthRouter);
+
+app.use(auth);
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
