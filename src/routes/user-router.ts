@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import { celebrate, Joi, Segments } from 'celebrate';
 import { isURL } from 'validator';
-import { getAllUsers, getUserById, modifyUser } from '../controllers/users';
+import {
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  modifyUser,
+} from '../controllers/users';
 import { URL_REGEXP } from '../constants/common';
+import { USER_CHANGE_AVATAR_ROUTE, USER_DELETE_ROUTE } from '../constants/user';
 
 const userRouter = Router();
 
@@ -26,7 +32,7 @@ userRouter.patch('/me', celebrate({
   }).min(1),
 }), modifyUser);
 
-userRouter.patch('me/avatar', celebrate({
+userRouter.patch(USER_CHANGE_AVATAR_ROUTE, celebrate({
   [Segments.BODY]: Joi.object().keys({
     avatar: Joi.string().uri().custom((value) => {
       if (isURL(value) && URL_REGEXP.test(value)) return value;
@@ -35,12 +41,6 @@ userRouter.patch('me/avatar', celebrate({
   }),
 }), modifyUser);
 
-userRouter.delete('/me/delete', celebrate(
-  {
-    [Segments.BODY]: Joi.object().keys({
-      email: Joi.string(),
-    }),
-  },
-));
+userRouter.delete(USER_DELETE_ROUTE, deleteUser);
 
 export default userRouter;

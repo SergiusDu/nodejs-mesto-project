@@ -70,6 +70,7 @@ export const modifyUser = async (
     if (!isValidJwsUserSignature(req.user)) {
       return next(new Error('User not authorized'));
     }
+
     const updateData : Partial<IUser> = {};
     if (req.body.name) updateData.name = req.body.name;
     if (req.body.about) updateData.about = req.body.about;
@@ -106,10 +107,22 @@ export const login = async (
   }
 };
 
-// export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//
-//   } catch (error) {
-//
-//   }
-// };
+export const deleteUser = async (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!isValidJwsUserSignature(req.user)) {
+      return next(new Error('User not authorized'));
+    }
+    const userId = req.params.userId || req.user._id;
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      return res.status(404).send('User not found');
+    }
+    return res.send({ message: 'User successfully deleted' });
+  } catch (error) {
+    return next(error);
+  }
+};

@@ -3,7 +3,7 @@ import { BASE_URL } from '../constants/common';
 import { IUser } from '../types/user';
 import { isValidUser } from '../utils/validation/user';
 import {
-  USER_BASE_ROUTE,
+  USER_BASE_ROUTE, USER_CHANGE_AVATAR_ROUTE, USER_DELETE_ROUTE,
   USER_SIGNIN_ROUTE,
   USER_SIGNUP_ROUTE,
 } from '../constants/user';
@@ -37,7 +37,9 @@ describe('API Endpoints', () => {
       await axios.post(`${BASE_URL}${USER_SIGNIN_ROUTE}`, wrongUserCredentials);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(error.response.status).toBe(400);
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(error.response.data.token).toBeUndefined();
       }
     }
@@ -70,5 +72,70 @@ describe('API Endpoints', () => {
     });
     const users = getUserResponse.data;
     expect(Array.isArray(users)).toBe(true);
+  });
+  it('PATCH /me/avatar должен обновлять аватар пользователя', async () => {
+    const userCredentials = {
+      email: mockUser.email,
+      password: mockUser.password,
+    };
+    const newAvatarUrl = 'https://example.com/new-avatar.jpg';
+    const loginResponse = await axios.post(`${BASE_URL}${USER_SIGNIN_ROUTE}`, userCredentials);
+    const cookies = loginResponse.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    if (!cookies) throw new Error('Куки не найдены');
+    const updateAvatarResponse = await axios.patch(
+      `${BASE_URL}${USER_BASE_ROUTE}${USER_CHANGE_AVATAR_ROUTE}`,
+      { avatar: newAvatarUrl },
+      {
+        headers: {
+          Cookie: cookies.join('; '),
+        },
+      },
+    );
+
+    expect(updateAvatarResponse.status).toBe(200);
+    expect(updateAvatarResponse.data.avatar).toBe(newAvatarUrl);
+  });
+
+  it('PATCH /me/avatar должен обновлять аватар пользователя с некорректным URL', async () => {
+    const userCredentials = {
+      email: mockUser.email,
+      password: mockUser.password,
+    };
+    const invalidAvatarUrls = ['http://ya', 'https://www.ya', 'justastring'];
+    const loginResponse = await axios.post(`${BASE_URL}${USER_SIGNIN_ROUTE}`, userCredentials);
+    const cookies = loginResponse.headers['set-cookie'];
+    if (!cookies) throw new Error('Куки не найдены');
+    await Promise.all(invalidAvatarUrls.map(async (url) => {
+      try {
+        await axios.patch(`${BASE_URL}${USER_BASE_ROUTE}${USER_CHANGE_AVATAR_ROUTE}`, { avatar: url }, {
+          headers: { Cookie: cookies.join('; ') },
+        });
+        throw new Error('Запрос должен был завершиться с ошибкой с некорректным URL');
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          // eslint-disable-next-line jest/no-conditional-expect
+          expect(error.response?.status).toBe(400);
+        } else {
+          throw error;
+        }
+      }
+    }));
+  });
+
+  it('DELETE /me/delete должен удалять аккаунт пользователя', async () => {
+    const userCredentials = {
+      email: mockUser.email,
+      password: mockUser.password,
+    };
+    const loginResponse = await axios.post(`${BASE_URL}${USER_SIGNIN_ROUTE}`, userCredentials);
+    const cookies = loginResponse.headers['set-cookie'];
+    if (!cookies) throw new Error('Куки не найдены');
+    const getDeleteResponse = await axios.delete(`${BASE_URL}${USER_BASE_ROUTE}${USER_DELETE_ROUTE}`, {
+      headers: {
+        Cookie: cookies.join(': '),
+      },
+    });
+    expect(getDeleteResponse.status).toEqual(200);
   });
 });

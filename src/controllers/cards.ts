@@ -1,10 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import cardsModel from '../models/card';
-import { RequestWithJwt } from '../types/user';
+import { IJwtUserSignature, RequestOrRequestWithJwt } from '../types/user';
 import { isValidJwsUserSignature } from '../utils/validation/user';
 
 export const getCards = async (
-  req: Request,
+  req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
@@ -17,13 +17,16 @@ export const getCards = async (
 };
 
 export const createCard = async (
-  req: RequestWithJwt,
+  req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!isValidJwsUserSignature(req)) return next(new Error('Необходима авторизация'));
-    const createdCard = await cardsModel.create({ ...req.body, owner: req.user?._id });
+    if (!isValidJwsUserSignature(req)) {
+      return next(new Error('Необходима авторизация'));
+    }
+    const { _id } = req.user as IJwtUserSignature;
+    const createdCard = await cardsModel.create({ ...req.body, owner: _id });
     return res.send(createdCard);
   } catch (error) {
     return next(error);
@@ -31,7 +34,7 @@ export const createCard = async (
 };
 
 export const deleteCard = async (
-  req: Request,
+  req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
@@ -49,42 +52,42 @@ export const deleteCard = async (
 };
 
 export const addLikeToCard = async (
-  req: RequestWithJwt,
+  req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) {
-      next(new Error('Пользователь не авторизован'));
-      return;
+    if (!isValidJwsUserSignature(req)) {
+      return next(new Error('Пользователь не авторизован'));
     }
+    const { _id } = req.user as IJwtUserSignature;
     const updatedCard = await cardsModel.findByIdAndUpdate(
       req.params.cardId,
-      { $addToSet: { likes: req.user._id } },
+      { $addToSet: { likes: _id } },
       { new: true },
     );
-    res.send(updatedCard);
+    return res.send(updatedCard);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };
 export const deleteLikeFromCard = async (
-  req: RequestWithJwt,
+  req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) {
-      next(new Error('Пользователь не авторизован'));
-      return;
+    if (!isValidJwsUserSignature(req)) {
+      return next(new Error('Пользователь не авторизован'));
     }
+    const { _id } = req.user as IJwtUserSignature;
     const { cardId } = req.params;
     await cardsModel.findByIdAndUpdate(cardId, {
-      $pull: { likes: req.user._id },
+      $pull: { likes: _id },
     });
     const updatedCard = await cardsModel.findById(cardId);
-    res.send(updatedCard);
+    return res.send(updatedCard);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };

@@ -1,4 +1,4 @@
-import { Schema, Model, model } from 'mongoose';
+import { Model, model, Schema } from 'mongoose';
 import isEmail from 'validator/lib/isEmail';
 import { isURL } from 'validator';
 import { URL_REGEXP } from '../constants/common';
@@ -41,9 +41,13 @@ const UserScheme = new Schema<IUser, IUserModel>(
     avatar: {
       type: String,
       required: true,
-      validate(input: string) {
-        return isURL(input) && URL_REGEXP.test(input);
-      },
+      validate:
+        {
+          validator(input: string) {
+            return isURL(input) && URL_REGEXP.test(input);
+          },
+          message: (props) => `${props.value} - некорректный url`,
+        },
     },
   },
 );
