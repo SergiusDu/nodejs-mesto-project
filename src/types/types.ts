@@ -1,17 +1,10 @@
-export interface IUser {
-  _id: string;
-  name: string;
-  about: string;
-  avatar: string;
-  email: string;
-  password: string;
-}
+import jwt from 'jsonwebtoken';
 
 declare global {
   // eslint-disable-next-line no-unused-vars
   namespace Express {
     export interface Request {
-      user?: Partial<IUser>;
+      user?: string | jwt.JwtPayload;
     }
   }
 }

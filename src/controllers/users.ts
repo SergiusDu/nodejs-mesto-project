@@ -1,11 +1,12 @@
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { constants as errorConstants } from 'http2';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/user';
-import { IUser } from '../types/types';
+import { IUser, RequestOrRequestWithJwt } from '../types/user';
+import { isValidJwsUserSignature } from '../utils/validation/user';
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: RequestOrRequestWithJwt, res: Response) => {
   try {
     const {
       email, password, name, about, avatar,
@@ -30,7 +31,11 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllUsers = async (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const allUsers = await userModel.find({});
     res.send(allUsers);
@@ -39,7 +44,11 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserById = async (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { userId } = req.params;
     const userData = await userModel.findById(userId);
@@ -52,39 +61,55 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const modifyUser = async (req: Request, res: Response, next: NextFunction) => {
+export const modifyUser = async (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    if (!req.user?._id) {
-      next(new Error('User not authorized'));
+    if (!isValidJwsUserSignature(req.user)) {
+      return next(new Error('User not authorized'));
     }
     const updateData : Partial<IUser> = {};
     if (req.body.name) updateData.name = req.body.name;
     if (req.body.about) updateData.about = req.body.about;
     if (req.body.avatar) updateData.avatar = req.body.avatar;
     const updatedProfile = await userModel.findByIdAndUpdate(
-      req.user?._id,
+      req.user._id,
       updateData,
       { new: true },
     );
-    res.send(updatedProfile);
+    return res.send(updatedProfile);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { email, password } = req.body;
     const existedUser = await userModel.findOne({ email }).select('+password');
     if (!existedUser) return next(new Error('Пользователь не найден'));
     const passwordMatch = await bcrypt.compare(password, existedUser.password);
     if (!passwordMatch) return next(new Error('Неверный пароль'));
-    const token = jwt.sign({ userId: existedUser._id }, existedUser.password, { expiresIn: 3600 });
-    res.cookie('jwt', token, {
+    const token = jwt.sign({ _id: existedUser._id }, 'some-secret-key', { expiresIn: 3600 });
+    return res.cookie('jwt', token, {
       maxAge: 3600000,
       httpOnly: true,
     }).send({ token });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 };
+
+// export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//
+//   } catch (error) {
+//
+//   }
+// };
