@@ -1,8 +1,17 @@
 import { Model, model, Schema } from 'mongoose';
-import isEmail from 'validator/lib/isEmail';
-import { isURL } from 'validator';
-import { URL_REGEXP } from '../constants/common';
 import { IUser } from '../types/user';
+import {
+  USER_ABOUT_MAX_LENGTH,
+  USER_ABOUT_MIN_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_EMAIL_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+} from '../constants/user';
+import {
+  MONGOOSE_EMAIL_VALIDATOR,
+  MONGOOSE_URL_VALIDATOR,
+} from '../utils/validation/common';
 
 interface IUserModel extends Model<IUser> {
   createUser(): void;
@@ -12,14 +21,12 @@ const UserScheme = new Schema<IUser, IUserModel>(
   {
     email: {
       type: String,
-      minlength: 3,
-      maxlength: 30,
+      minlength: USER_EMAIL_MIN_LENGTH,
+      maxlength: USER_EMAIL_MAX_LENGTH,
       required: true,
       unique: true,
       index: true,
-      validate(input: string) {
-        return isEmail(input);
-      },
+      validate: MONGOOSE_EMAIL_VALIDATOR,
     },
     password: {
       type: String,
@@ -28,30 +35,24 @@ const UserScheme = new Schema<IUser, IUserModel>(
     },
     name: {
       type: String,
-      minlength: 2,
-      maxlength: 30,
+      minlength: USER_NAME_MIN_LENGTH,
+      maxlength: USER_NAME_MAX_LENGTH,
       required: true,
     },
     about: {
       type: String,
-      minlength: 2,
-      maxlength: 300,
+      minlength: USER_ABOUT_MIN_LENGTH,
+      maxlength: USER_ABOUT_MAX_LENGTH,
       required: true,
     },
     avatar: {
       type: String,
       required: true,
-      validate:
-        {
-          validator(input: string) {
-            return isURL(input) && URL_REGEXP.test(input);
-          },
-          message: (props) => `${props.value} - некорректный url`,
-        },
+      validate: MONGOOSE_URL_VALIDATOR,
     },
   },
 );
-UserScheme.statics.createUser = function (user: IUser) {
+UserScheme.statics.createUser = function createUser(user: IUser) {
   return this.create<IUser>(user);
 };
 export default model<IUser>('user', UserScheme);

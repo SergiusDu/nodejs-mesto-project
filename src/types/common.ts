@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { Document } from 'mongoose';
 
 declare global {
   // eslint-disable-next-line no-unused-vars
@@ -8,3 +9,4 @@ declare global {
     }
   }
 }
+export type MongooseResponse<T> = (Document<unknown, {}, T> & T) | null;

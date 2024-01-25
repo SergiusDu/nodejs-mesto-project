@@ -1,55 +1,47 @@
 import { Router } from 'express';
-import { celebrate, Joi, Segments } from 'celebrate';
 import {
   addLikeToCard,
   createCard,
-  deleteCard, deleteLikeFromCard,
+  deleteCard,
+  deleteLikeFromCard,
   getCards,
 } from '../controllers/cards';
+import { ROOT_PATH } from '../constants/common';
+import { VERIFY_AUTH_TOKEN_COOKIE } from '../utils/validation/common';
+import {
+  VALIDATE_DELETE_CARD,
+  VALIDATE_DELETE_LIKE,
+  VALIDATE_POST_CARD,
+  VALIDATE_PUT_LIKE,
+} from '../utils/validation/cards';
+import { CARD_ID_ROUTE, CARD_LIKES_ROUTE } from '../constants/card';
 
 const cardRouter = Router();
-// TODO Доделать валидацию url
-cardRouter.post('/', celebrate({
-  [Segments.BODY]: Joi.object().keys({
-    name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().uri().required(),
-    createAt: Joi.date().required(),
-  }),
-}), createCard);
-cardRouter.get('/', getCards);
-cardRouter.delete('/:cardId', celebrate(
-  {
-    [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
-    }),
-  },
-), deleteCard);
-cardRouter.put('/:cardId/likes', celebrate(
-  {
-    [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
-    }),
-    [Segments.BODY]: Joi.object().keys(
-      {
-        user: Joi.object().keys({
-          _id: Joi.string().required(),
-        }),
-      },
-    ),
-  },
-), addLikeToCard);
-cardRouter.delete('/:cardId/likes', celebrate(
-  {
-    [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
-    }),
-    [Segments.BODY]: Joi.object().keys(
-      {
-        user: Joi.object().keys({
-          _id: Joi.string().required(),
-        }),
-      },
-    ),
-  },
-), deleteLikeFromCard);
+cardRouter.get(
+  ROOT_PATH,
+  VERIFY_AUTH_TOKEN_COOKIE,
+  getCards,
+);
+
+cardRouter.post(
+  ROOT_PATH,
+  VALIDATE_POST_CARD,
+  createCard,
+);
+
+cardRouter.delete(
+  CARD_ID_ROUTE,
+  VALIDATE_DELETE_CARD,
+  deleteCard,
+);
+cardRouter.put(
+  CARD_LIKES_ROUTE,
+  VALIDATE_PUT_LIKE,
+  addLikeToCard,
+);
+cardRouter.delete(
+  CARD_LIKES_ROUTE,
+  VALIDATE_DELETE_LIKE,
+  deleteLikeFromCard,
+);
 export default cardRouter;
