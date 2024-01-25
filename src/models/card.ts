@@ -1,16 +1,19 @@
 import { model, Schema } from 'mongoose';
 import { ICard } from '../types/card';
+import { CARD_NAME_MAX_LENGTH, CARD_NAME_MIN_LENGTH } from '../constants/card';
+import { MONGOOSE_URL_VALIDATOR } from '../utils/validation/common';
 
 const CardScheme = new Schema<ICard>(
   {
     name: {
       type: String,
-      minlength: 2,
-      maxlength: 30,
+      minlength: CARD_NAME_MIN_LENGTH,
+      maxlength: CARD_NAME_MAX_LENGTH,
       required: true,
     },
     link: {
       type: String,
+      validate: MONGOOSE_URL_VALIDATOR,
       required: true,
     },
     owner: {

@@ -10,22 +10,23 @@ import errorHandler from './middlewares/errorHandler';
 import cardRouter from './routes/card-router';
 import auth from './middlewares/auth';
 import userAuthRouter from './routes/user-auth-router';
+import { CARD_BASE_ROUTE } from './constants/card';
+import { USER_BASE_ROUTE } from './constants/user';
 
 dotenv.config();
 // TODO Fix port issue
 const port = process.env.PORT ?? 3000;
 connectDb();
-export const app = express();
+const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(sanitizeRequestBody);
 app.use(requestLogger);
-
 app.use(userAuthRouter);
 
 app.use(auth);
-app.use('/users', userRouter);
-app.use('/cards', cardRouter);
+app.use(USER_BASE_ROUTE, userRouter);
+app.use(CARD_BASE_ROUTE, cardRouter);
 
 app.use(errorLogger);
 app.use(errorHandler);
@@ -33,3 +34,5 @@ app.use(errors());
 app.listen(3000, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
+
+export default app;

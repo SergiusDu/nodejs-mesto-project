@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { isValidJwsUserSignature } from '../utils/validation/user';
+import { IJwtUserSignature } from '../types/user';
 
-export default (req: Request, res: Response, next: NextFunction) => {
+export default (req: Request, _: Response, next: NextFunction) => {
   try {
     const cookies = req.headers.cookie;
     if (!cookies) {
@@ -13,10 +14,9 @@ export default (req: Request, res: Response, next: NextFunction) => {
     if (!jwtToken) {
       return next(new Error(`Необходимо авторизоваться ${req.url}`));
     }
-    const { payload } = jwt.verify(jwtToken, 'some-secret-key', { complete: true });
+    const payload = jwt.verify(jwtToken, 'some-secret-key') as IJwtUserSignature;
     if (!isValidJwsUserSignature(payload)) {
-      console.error('Ошибка авторизации', req.url);
-      return next(new Error(`Необходимо авторизоваться ${req.url}`));
+      return next(new Error(`Ошибка авторизации. Необходимо авторизоваться ${req.url}`));
     }
     req.user = payload;
     return next();

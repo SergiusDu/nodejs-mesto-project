@@ -9,7 +9,7 @@ let connectionAttempt = 0;
  * Пытается подключиться до достижения максимального числа попыток.
  * В случае неудачи выводит сообщение об ошибке и завершает процесс.
  */
-async function connectDb() {
+async function connectDb(): Promise<void> {
   if (mongoose.connection.readyState) {
     console.log('MongoDB уже подключен.');
     return;
@@ -28,7 +28,7 @@ async function connectDb() {
     } else {
       console.error('Произошла неизвестная ошибка при подключении к MongoDB');
     }
-    connectionAttempt++;
+    connectionAttempt += 1;
     if (connectionAttempt < MAX_CONNECTION_ATTEMPTS) {
       setTimeout(connectDb, RECONNECTION_INTERVAL);
     } else {
