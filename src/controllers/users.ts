@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Error as MongooseError } from 'mongoose';
+import dotenv from 'dotenv';
 import userModel from '../models/user';
 import { IUser, RequestOrRequestWithJwt } from '../types/user';
 import { isValidJwsUserSignature } from '../utils/validation/user';
@@ -212,7 +213,7 @@ export const login = async (
       next(new NotAuthorizedError(WRONG_PASSWORD_ERROR_MESSAGE));
       return;
     }
-    const token = jwt.sign({ _id: existedUser._id }, 'some-secret-key', { expiresIn: COOKIE_MAX_AGE });
+    const token = jwt.sign({ _id: existedUser._id }, process.env.NODE_ENV || 'some-secret-key', { expiresIn: COOKIE_MAX_AGE });
     const { password: _, ...user } = existedUser.toObject();
     res.cookie('jwt', token, {
       maxAge: JWT_EXPIRATION_TIME,
