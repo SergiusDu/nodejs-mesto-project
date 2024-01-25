@@ -14,7 +14,6 @@ import { CARD_BASE_ROUTE } from './constants/card';
 import { USER_BASE_ROUTE } from './constants/user';
 
 dotenv.config();
-// TODO Fix port issue
 const port = process.env.PORT ?? 3000;
 connectDb();
 const app = express();
