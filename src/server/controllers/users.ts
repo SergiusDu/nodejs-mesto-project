@@ -76,6 +76,7 @@ export const createUser = (
       res.status(RES_CREATED_CODE).send(createdUser);
     })
     .catch((error) => {
+      console.log(error);
       if (error instanceof MongooseError) {
         handleMongooseError(error, next);
       } else {

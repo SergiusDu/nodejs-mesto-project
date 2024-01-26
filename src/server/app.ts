@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { errors } from 'celebrate';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import * as path from 'path';
 import { errorLogger, requestLogger } from './middlewares/logger';
 import connectDb from './db/database';
 import userRouter from './routes/user-router';
@@ -26,7 +27,8 @@ app.use(helmet());
 app.use(sanitizeRequestBody);
 app.use(requestLogger);
 app.use(userAuthRouter);
-
+const buildPath = path.join(__dirname, '../../build');
+app.use(express.static(buildPath));
 app.use(auth);
 
 app.use(USER_BASE_ROUTE, userRouter);

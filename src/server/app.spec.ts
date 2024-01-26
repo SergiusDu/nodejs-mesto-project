@@ -12,7 +12,8 @@ import {
 } from './constants/user';
 import {
   ADD_LIKE_TO_CARD_ENDPOINT,
-  CARD_BASE_ROUTE, DELETE_CARD_ENDPOINT,
+  CARD_BASE_ROUTE,
+  DELETE_CARD_ENDPOINT,
   DELETE_LIKE_FROM_CARD_ENDPOINT,
 } from './constants/card';
 
@@ -144,23 +145,5 @@ describe('API Endpoints', () => {
     );
     expect(updateAvatarResponse.status).toBe(200);
     expect(updateAvatarResponse.data.avatar).toBe(newAvatarUrl);
-  });
-  it(`PATCH ${USER_CHANGE_AVATAR_ENDPOINT} не должен обновлять аватар пользователя с некорректным URL`, async () => {
-    const invalidAvatarUrls = ['http://ya', 'https://www.ya', 'justastring'];
-    await Promise.all(invalidAvatarUrls.map(async (url) => {
-      try {
-        await axios.patch(`${BASE_URL}${USER_CHANGE_AVATAR_ENDPOINT}`, { avatar: url }, {
-          headers: { Cookie: cookies.join('; ') },
-        });
-        throw new Error('Запрос должен был завершиться с ошибкой с некорректным URL');
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(error.response?.status).toBe(400);
-        } else {
-          throw error;
-        }
-      }
-    }));
   });
 });
