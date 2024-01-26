@@ -9,11 +9,7 @@ import handleMongooseError from '../utils/handlers/mongoose-error-handler';
 import {
   AUTHORIZATION_ERROR_MESSAGE,
   INTERNAL_SERVER_ERROR_WHILE_CREATING_USER_MESSAGE,
-  USER_DATA_CHANGING_UNKNOWN_ERROR_MESSAGE,
   USER_DELETED_SUCCESS_MESSAGE,
-  USER_DELETION_UNKNOWN_ERROR_MESSAGE,
-  USER_FETCH_BY_ID_UNKNOWN_ERROR_MESSAGE,
-  USER_LOGIN_UNKNOWN_ERROR_MESSAGE,
   USER_NOT_FOUND_ERROR_MESSAGE,
   USERS_FETCH_UNKNOWN_ERROR_MESSAGE,
   WRONG_PASSWORD_ERROR_MESSAGE,
@@ -55,37 +51,37 @@ import {
  * @throws {MongooseError} В случае ошибок валидации данных или других ошибок
  *   Mongoose.
  */
-export const createUser = async (
-  req: RequestOrRequestWithJwt,
+export const createUser = (
+  req: RequestOrRequestWithJwt, // Предполагается, что этот тип определен
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    const {
-      email,
-      password,
-      name = USER_DEFAULT_NAME,
-      about = USER_DEFAULT_ABOUT,
-      avatar = USER_DEFAULT_AVATAR,
-    } = req.body;
+): void => {
+  const {
+    email,
+    password,
+    name = USER_DEFAULT_NAME,
+    about = USER_DEFAULT_ABOUT,
+    avatar = USER_DEFAULT_AVATAR,
+  } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const createdUser = await userModel.create({
+  bcrypt.hash(password, 10)
+    .then((hashedPassword) => userModel.create({
       email,
       password: hashedPassword,
       name,
       about,
       avatar,
+    }))
+    .then((createdUser) => {
+      res.status(RES_CREATED_CODE).send(createdUser);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(new InternalServerError(INTERNAL_SERVER_ERROR_WHILE_CREATING_USER_MESSAGE));
+      }
     });
-
-    res.status(RES_CREATED_CODE).send(createdUser);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(new InternalServerError(INTERNAL_SERVER_ERROR_WHILE_CREATING_USER_MESSAGE));
-  }
 };
 
 /**
@@ -108,21 +104,22 @@ export const createUser = async (
  * @throws {MongooseError} В случае возникновения ошибок при взаимодействии с
  *   базой данных.
  */
-export const getAllUsers = async (
+export const getAllUsers = (
   _: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    const allUsers = await userModel.find({});
-    res.send(allUsers);
-    return undefined;
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      return handleMongooseError(error, next);
-    }
-    return next(new InternalServerError(USERS_FETCH_UNKNOWN_ERROR_MESSAGE));
-  }
+): void => {
+  userModel.find({})
+    .then((allUsers) => {
+      res.send(allUsers);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(new InternalServerError(USERS_FETCH_UNKNOWN_ERROR_MESSAGE));
+      }
+    });
 };
 
 /**
@@ -150,103 +147,114 @@ export const getAllUsers = async (
  * @throws {MongooseError} В случае возникновения ошибок при взаимодействии с
  *   базой данных.
  */
-export const getUserById = async (
+export const getUserById = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-):Promise<void> => {
-  try {
-    const { userId } = req.params;
-    const userData = await userModel.findById(userId)
-      .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE));
-    res.send(userData);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-    }
-    next(new InternalServerError(USER_FETCH_BY_ID_UNKNOWN_ERROR_MESSAGE));
-  }
+): void => {
+  const { userId } = req.params;
+
+  userModel.findById(userId)
+    .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE))
+    .then((userData) => {
+      res.send(userData);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
-export const modifyUser = async (
-  req: RequestOrRequestWithJwt,
+export const modifyUser = (
+  req: RequestOrRequestWithJwt, // Предполагается, что этот тип определен
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new NotAuthorizedError());
-      return;
-    }
-    const updateData : Partial<IUser> = {};
-    if (req.body.name) updateData.name = req.body.name;
-    if (req.body.about) updateData.about = req.body.about;
-    if (req.body.avatar) updateData.avatar = req.body.avatar;
-    const updatedProfile = await userModel.findByIdAndUpdate(
-      req.user._id,
-      updateData,
-      { new: true },
-    )
-      .orFail(new NotFoundError());
-    res.send(updatedProfile);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-    }
-    next(new InternalServerError(USER_DATA_CHANGING_UNKNOWN_ERROR_MESSAGE));
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError());
+    return;
   }
+
+  const updateData: Partial<IUser> = {};
+  if (req.body.name) updateData.name = req.body.name;
+  if (req.body.about) updateData.about = req.body.about;
+  if (req.body.avatar) updateData.avatar = req.body.avatar;
+
+  userModel.findByIdAndUpdate(
+    req.user._id,
+    updateData,
+    { new: true },
+  )
+    .orFail(new NotFoundError())
+    .then((updatedProfile) => {
+      res.send(updatedProfile);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
-export const login = async (
+export const login = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    const { email, password } = req.body;
-    const existedUser = await userModel.findOne({ email }).select('+password')
-      .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE));
-    const passwordMatch = await bcrypt.compare(password, existedUser.password);
-    if (!passwordMatch) {
-      next(new NotAuthorizedError(WRONG_PASSWORD_ERROR_MESSAGE));
-      return;
-    }
-    const token = jwt.sign(
-      { _id: existedUser._id },
-      process.env.NODE_ENV ?? 'some-secret-key',
-      { expiresIn: COOKIE_MAX_AGE },
-    );
-    const { password: _, ...user } = existedUser.toObject();
-    res.cookie('jwt', token, {
-      maxAge: JWT_EXPIRATION_TIME,
-      httpOnly: true,
-    }).send({ token, user });
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-    }
-    next(new InternalServerError(USER_LOGIN_UNKNOWN_ERROR_MESSAGE));
-  }
+): void => {
+  const { email, password } = req.body;
+  userModel.findOne({ email }).select('+password')
+    .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE))
+    .then((existedUser) => bcrypt.compare(password, existedUser.password)
+      .then((passwordMatch) => {
+        if (!passwordMatch) {
+          throw new NotAuthorizedError(WRONG_PASSWORD_ERROR_MESSAGE);
+        }
+        const token = jwt.sign(
+          { _id: existedUser._id },
+          process.env.NODE_ENV ?? 'some-secret-key',
+          { expiresIn: COOKIE_MAX_AGE },
+        );
+        const { password: _, ...user } = existedUser.toObject();
+        res.cookie('jwt', token, {
+          maxAge: JWT_EXPIRATION_TIME,
+          httpOnly: true,
+        }).send({ token, user });
+      }))
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
-export const deleteUser = async (
-  req: RequestOrRequestWithJwt,
+export const deleteUser = (
+  req: RequestOrRequestWithJwt, // Предполагается, что этот тип определен
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new NotAuthorizedError(AUTHORIZATION_ERROR_MESSAGE));
-      return;
-    }
-    const userId = req.user._id;
-    await userModel.findByIdAndDelete(userId)
-      .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE));
-    res.send({ message: USER_DELETED_SUCCESS_MESSAGE });
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-    }
-    next(new InternalServerError(USER_DELETION_UNKNOWN_ERROR_MESSAGE));
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError(AUTHORIZATION_ERROR_MESSAGE));
+    return;
   }
+
+  const userId = req.user._id;
+  userModel.findByIdAndDelete(userId)
+    .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE))
+    .then(() => {
+      res.send({ message: USER_DELETED_SUCCESS_MESSAGE });
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };

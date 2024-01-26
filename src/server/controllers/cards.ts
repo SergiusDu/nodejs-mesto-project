@@ -1,7 +1,7 @@
 import { Error as MongooseError } from 'mongoose';
-import { Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
 import cardsModel from '../models/card';
-import { IJwtUserSignature, RequestOrRequestWithJwt } from '../types/user';
+import { RequestOrRequestWithJwt } from '../types/user';
 import { isValidJwsUserSignature } from '../utils/validation/user';
 import NotAuthorizedError from '../errors/not-authorized-error';
 import handleMongooseError from '../utils/handlers/mongoose-error-handler';
@@ -36,21 +36,22 @@ import { RES_CREATED_CODE } from '../constants/common';
  * // Пример маршрута, использующего этот обработчик:
  * router.get('/cards', getCards);
  */
-export const getCards = async (
-  _: RequestOrRequestWithJwt,
+export const getCards = (
+  _: RequestOrRequestWithJwt, // Предполагается, что этот тип определен
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    const cards = await cardsModel.find({}, {});
-    res.send({ cards });
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(error);
-  }
+): void => {
+  cardsModel.find({}, {})
+    .then((cards) => {
+      res.send({ cards });
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
 /**
@@ -78,113 +79,118 @@ export const getCards = async (
  * // Пример маршрута, использующего этот обработчик:
  * router.post('/cards', createCard);
  */
-export const createCard = async (
+export const createCard = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new NotAuthorizedError(UNAUTHORIZED_CARD_CREATION_ERROR_MESSAGE));
-      return;
-    }
-    const createdCard = await cardsModel.create({ ...req.body, owner: req.user._id });
-    res.status(RES_CREATED_CODE).send(createdCard);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(error);
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError(UNAUTHORIZED_CARD_CREATION_ERROR_MESSAGE));
+    return;
   }
+
+  cardsModel.create({ ...req.body, owner: req.user._id })
+    .then((createdCard) => {
+      res.status(RES_CREATED_CODE).send(createdCard);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
-export const deleteCard = async (
+export const deleteCard = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new NotAuthorizedError(UNAUTHORIZED_CARD_DELETION_ERROR_MESSAGE));
-      return;
-    }
-    const cardId = req.params?.cardId;
-    const cardToDelete = await cardsModel.findById(cardId)
-      .orFail(new NotFoundError(CARD_FOR_DELETION_NOT_FOUND_ERROR_MESSAGE));
-    if (cardToDelete.owner.toString() !== req.user._id) {
-      next(new NotAuthorizedError(INSUFFICIENT_PERMISSIONS_ERROR_MESSAGE));
-      return;
-    }
-    const deleteResults = await cardsModel.deleteOne({ _id: cardId });
-    if (deleteResults.deletedCount < 1) {
-      next(new NotFoundError(CARD_FOR_DELETION_NOT_FOUND_ERROR_MESSAGE));
-      return;
-    }
-    res.send(CARD_SUCCESS_DELETION_MESSAGE);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(error);
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError(UNAUTHORIZED_CARD_DELETION_ERROR_MESSAGE));
+    return;
   }
+  const userId = req.user._id;
+  const cardId = req.params?.cardId;
+  cardsModel.findById(cardId)
+    .orFail(new NotFoundError(CARD_FOR_DELETION_NOT_FOUND_ERROR_MESSAGE))
+    .then((cardToDelete) => {
+      if (cardToDelete.owner.toString() !== userId) {
+        throw new NotAuthorizedError(INSUFFICIENT_PERMISSIONS_ERROR_MESSAGE);
+      }
+      return cardsModel.deleteOne({ _id: cardId });
+    })
+    .then((deleteResults) => {
+      if (deleteResults.deletedCount < 1) {
+        throw new NotFoundError(CARD_FOR_DELETION_NOT_FOUND_ERROR_MESSAGE);
+      }
+      res.send(CARD_SUCCESS_DELETION_MESSAGE);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
 
-export const addLikeToCard = async (
+export const addLikeToCard = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new Error(AUTHORIZATION_ERROR_MESSAGE));
-      return;
-    }
-    const { _id } = req.user as IJwtUserSignature;
-    const updatedCard = await cardsModel.findByIdAndUpdate(
-      req.params.cardId,
-      { $addToSet: { likes: _id } },
-      { new: true },
-    )
-      .orFail(new NotFoundError());
-    res.send(updatedCard);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(error);
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new Error(AUTHORIZATION_ERROR_MESSAGE));
+    return;
   }
+  const { _id } = req.user;
+
+  cardsModel.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: _id } },
+    { new: true },
+  )
+    .orFail(new NotFoundError())
+    .then((updatedCard) => {
+      res.send(updatedCard);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };
-export const deleteLikeFromCard = async (
+export const deleteLikeFromCard = (
   req: RequestOrRequestWithJwt,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
-  try {
-    if (!isValidJwsUserSignature(req.user)) {
-      next(new Error(AUTHORIZATION_ERROR_MESSAGE));
-      return;
-    }
-    const { _id } = req.user;
-    const { cardId } = req.params;
-    await cardsModel.findByIdAndUpdate(
-      cardId,
-      {
-        $pull: { likes: _id },
-      },
-      { new: true },
-    )
-      .orFail(new NotFoundError());
-    const updatedCard = await cardsModel.findById(cardId)
-      .orFail(new NotFoundError());
-    res.send(updatedCard);
-  } catch (error) {
-    if (error instanceof MongooseError) {
-      handleMongooseError(error, next);
-      return;
-    }
-    next(error);
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new Error(AUTHORIZATION_ERROR_MESSAGE));
+    return;
   }
+  const { _id } = req.user;
+  const { cardId } = req.params;
+
+  cardsModel.findByIdAndUpdate(
+    cardId,
+    { $pull: { likes: _id } },
+    { new: true },
+  )
+    .orFail(new NotFoundError())
+    .then(() => cardsModel.findById(cardId).orFail(new NotFoundError()))
+    .then((updatedCard) => {
+      res.send(updatedCard);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
 };

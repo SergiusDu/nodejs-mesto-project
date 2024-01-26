@@ -28,6 +28,7 @@ app.use(requestLogger);
 app.use(userAuthRouter);
 
 app.use(auth);
+
 app.use(USER_BASE_ROUTE, userRouter);
 app.use(CARD_BASE_ROUTE, cardRouter);
 
