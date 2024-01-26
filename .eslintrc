@@ -19,11 +19,7 @@
   ],
   "settings": {
     "ignorePatterns": [
-      "/src/components",
-      "/src/contexts",
-      "/src/index.js",
-      "src/serviceWorker.js",
-      "/src/utils/api.js"
+      "/src/client"
     ],
     "import/resolver": {
       "node": {
