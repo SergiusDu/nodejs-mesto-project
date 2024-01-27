@@ -1,6 +1,7 @@
 import { celebrate, Joi, Segments } from 'celebrate';
 import { ICard } from '../../types/card';
-import { VALIDATE_DATE, VALIDATE_JWT, VALIDATE_URL } from './common';
+import { VALIDATE_MONGOOSE_ID, VALIDATE_URL } from './common';
+import { CARD_NAME_MAX_LENGTH, CARD_NAME_MIN_LENGTH } from '../../constants/card';
 
 export function isValidCard(card: any): card is ICard {
   return typeof card._id === 'string'
@@ -13,33 +14,29 @@ export function isValidCard(card: any): card is ICard {
 }
 
 export const VALIDATE_POST_CARD = celebrate({
-  [Segments.COOKIES]: VALIDATE_JWT.unknown(),
   [Segments.BODY]: Joi.object().keys({
-    name: Joi.string().min(2).max(30).required(),
+    name: Joi.string().min(CARD_NAME_MIN_LENGTH).max(CARD_NAME_MAX_LENGTH).required(),
     link: VALIDATE_URL.required(),
-    createAt: VALIDATE_DATE.required(),
   }),
 });
 
 export const VALIDATE_DELETE_CARD = celebrate(
   {
-    [Segments.COOKIES]: VALIDATE_JWT.unknown(),
     [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
+      cardId: VALIDATE_MONGOOSE_ID.required(),
     }),
   },
 );
 export const VALIDATE_PUT_LIKE = celebrate(
   {
-    [Segments.COOKIES]: VALIDATE_JWT.unknown(),
     [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
+      cardId: VALIDATE_MONGOOSE_ID.required(),
     }),
     [Segments.BODY]: Joi.object().keys(
       {
         user: Joi.object().keys(
           {
-            _id: Joi.string().required(),
+            _id: VALIDATE_MONGOOSE_ID.required(),
           },
         ),
       },
@@ -49,14 +46,13 @@ export const VALIDATE_PUT_LIKE = celebrate(
 
 export const VALIDATE_DELETE_LIKE = celebrate(
   {
-    [Segments.COOKIES]: VALIDATE_JWT.unknown(),
     [Segments.PARAMS]: Joi.object().keys({
-      cardId: Joi.string().required(),
+      cardId: VALIDATE_MONGOOSE_ID.required(),
     }),
     [Segments.BODY]: Joi.object().keys(
       {
         user: Joi.object().keys({
-          _id: Joi.string().required(),
+          _id: VALIDATE_MONGOOSE_ID.required(),
         }),
       },
     ),

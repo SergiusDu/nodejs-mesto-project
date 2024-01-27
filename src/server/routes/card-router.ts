@@ -7,7 +7,6 @@ import {
   getCards,
 } from '../controllers/cards';
 import { ROOT_PATH } from '../constants/common';
-import { VERIFY_AUTH_TOKEN_COOKIE } from '../utils/validation/common';
 import {
   VALIDATE_DELETE_CARD,
   VALIDATE_DELETE_LIKE,
@@ -19,7 +18,6 @@ import { CARD_ID_ROUTE, CARD_LIKES_ROUTE } from '../constants/card';
 const cardRouter = Router();
 cardRouter.get(
   ROOT_PATH,
-  VERIFY_AUTH_TOKEN_COOKIE,
   getCards,
 );
 

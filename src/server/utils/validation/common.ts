@@ -10,6 +10,7 @@ export const VALIDATE_URL = Joi.string()
     if (isURL(value) && URL_REGEXP.test(value)) return value;
     throw new ValidationError('Некорректный URL');
   });
+export const VALIDATE_MONGOOSE_ID = Joi.string().hex().length(24);
 
 export const VALIDATE_JWT = Joi.object({
   jwt: Joi.string().required(),

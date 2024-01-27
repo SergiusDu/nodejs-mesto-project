@@ -8,8 +8,6 @@ import {
   USER_DEFAULT_AVATAR,
   USER_DEFAULT_NAME,
   USER_EMAIL_KEY,
-  USER_EMAIL_MAX_LENGTH,
-  USER_EMAIL_MIN_LENGTH,
   USER_MONGOOSE_MODEL_NAME,
   USER_NAME_KEY,
   USER_NAME_MAX_LENGTH,
@@ -33,8 +31,6 @@ interface IUserModel extends Model<IUser> {
 const UserScheme = new Schema<IUser, IUserModel>({
   email: {
     type: String,
-    minlength: mongooseMinLimitsDescriber(USER_EMAIL_MIN_LENGTH, USER_EMAIL_KEY),
-    maxlength: mongooseMaxLimitsDescriber(USER_EMAIL_MAX_LENGTH, USER_EMAIL_KEY),
     required: mongooseRequiredFieldSecriber(USER_EMAIL_KEY),
     unique: true,
     index: true,

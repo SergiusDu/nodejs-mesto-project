@@ -3,16 +3,15 @@ import jwt from 'jsonwebtoken';
 import { isValidJwsUserSignature } from '../utils/validation/user';
 import { IJwtUserSignature } from '../types/user';
 import NotAuthorizedError from '../errors/not-authorized-error';
+import {
+  getJwtTokenFromBearer,
+  getJwtTokenFromCookies,
+} from '../utils/server-api';
 
 export default (req: Request, _: Response, next: NextFunction) => {
   new Promise<void>((resolve, reject) => {
-    const cookies = req.headers.cookie;
-    if (!cookies) {
-      reject(new NotAuthorizedError(`Не обнаружены куки ${req.url}`));
-      return;
-    }
-    const cookieArray = cookies.split(';');
-    const jwtToken = cookieArray.find((cookie) => cookie.startsWith('jwt='))?.split('jwt=')[1];
+    const jwtToken = getJwtTokenFromCookies(req.headers.cookie)
+      ?? getJwtTokenFromBearer(req.headers.authorization);
     if (!jwtToken) {
       reject(new NotAuthorizedError(`Необходимо авторизоваться ${req.url}`));
       return;

@@ -56,7 +56,6 @@ describe('API Endpoints', () => {
     const cardData = {
       name: 'Тестовая карточка',
       link: 'https://example.com/test-card.jpg',
-      createAt: new Date().toISOString(),
     };
     const response = await axios.post(`${BASE_URL}${CARD_BASE_ROUTE}`, cardData, {
       headers: {
@@ -73,7 +72,7 @@ describe('API Endpoints', () => {
         Cookie: cookies.join('; '),
       },
     });
-    expect(Array.isArray(response.data.cards)).toBe(true);
+    expect(Array.isArray(response.data)).toBe(true);
   });
   it('PUT /cards/:cardId/likes должен добавлять лайк карточке', async () => {
     const response = await axios.put(`${BASE_URL}${ADD_LIKE_TO_CARD_ENDPOINT.replace(':cardId', createdCardId)}`, {}, {

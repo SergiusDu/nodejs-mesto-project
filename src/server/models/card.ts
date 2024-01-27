@@ -42,7 +42,7 @@ const CardScheme = new Schema<ICard>(
     },
     createAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now,
     },
   },
   { versionKey: false },

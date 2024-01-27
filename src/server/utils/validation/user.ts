@@ -7,7 +7,7 @@ import {
   USER_NAME_MAX_LENGTH,
   USER_NAME_MIN_LENGTH,
 } from '../../constants/user';
-import { VALIDATE_JWT, VALIDATE_URL } from './common';
+import { VALIDATE_MONGOOSE_ID, VALIDATE_URL } from './common';
 
 export function isValidUser(obj: any): obj is IUser {
   return typeof obj._id === 'string'
@@ -39,16 +39,12 @@ export const VALIDATE_USER_NAME = Joi.string()
   .min(USER_NAME_MIN_LENGTH).max(USER_NAME_MAX_LENGTH);
 export const VALIDATE_USER_ABOUT = Joi.string()
   .min(USER_ABOUT_MIN_LENGTH).max(USER_ABOUT_MAX_LENGTH);
-
-export const VALIDATE_USER_ID = Joi.string().required();
 export const VALIDATE_GET_USER_BY_ID = celebrate({
-  [Segments.COOKIES]: VALIDATE_JWT.unknown(),
   [Segments.PARAMS]: Joi.object().keys({
-    userId: VALIDATE_USER_ID,
+    userId: VALIDATE_MONGOOSE_ID.required(),
   }),
 });
 export const VALIDATE_USER_PROFILE_PATCH = celebrate({
-  [Segments.COOKIES]: VALIDATE_JWT.unknown(),
   [Segments.BODY]: Joi.object().keys({
     name: VALIDATE_USER_NAME,
     about: VALIDATE_USER_ABOUT,
@@ -57,7 +53,6 @@ export const VALIDATE_USER_PROFILE_PATCH = celebrate({
 });
 
 export const VALIDATE_USER_AVATAR_PATCH = celebrate({
-  [Segments.COOKIES]: VALIDATE_JWT.unknown(),
   [Segments.BODY]: Joi.object().keys({
     avatar: VALIDATE_URL.required(),
   }),

@@ -41,9 +41,10 @@ export const getCards = (
   res: Response,
   next: NextFunction,
 ): void => {
-  cardsModel.find({}, {})
+  cardsModel.find()
+    .sort({ createAt: 'desc' })
     .then((cards) => {
-      res.send({ cards });
+      res.send(cards);
     })
     .catch((error) => {
       if (error instanceof MongooseError) {
@@ -119,7 +120,7 @@ export const deleteCard = (
       if (cardToDelete.owner.toString() !== userId) {
         throw new NotAuthorizedError(INSUFFICIENT_PERMISSIONS_ERROR_MESSAGE);
       }
-      return cardsModel.deleteOne({ _id: cardId });
+      return cardToDelete.deleteOne();
     })
     .then((deleteResults) => {
       if (deleteResults.deletedCount < 1) {

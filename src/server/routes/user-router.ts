@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   deleteUser,
   getAllUsers,
+  getProfileData,
   getUserById,
   modifyUser,
 } from '../controllers/users';
@@ -20,6 +21,10 @@ import { ROOT_PATH } from '../constants/common';
 import { VERIFY_AUTH_TOKEN_COOKIE } from '../utils/validation/common';
 
 const userRouter = Router();
+userRouter.get(
+  USER_PROFILE_ROUTE,
+  getProfileData,
+);
 
 userRouter.get(
   ROOT_PATH,
@@ -32,6 +37,7 @@ userRouter.get(
   VALIDATE_GET_USER_BY_ID,
   getUserById,
 );
+
 userRouter.patch(
   USER_PROFILE_ROUTE,
   VALIDATE_USER_PROFILE_PATCH,

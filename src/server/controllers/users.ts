@@ -123,6 +123,26 @@ export const getAllUsers = (
     });
 };
 
+export const getProfileData = (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError());
+    return;
+  }
+  userModel.findById(req.user._id)
+    .orFail(new NotFoundError())
+    .then((userData) => res.send(userData))
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      }
+      next(error);
+    });
+};
+
 /**
  * Асинхронный обработчик для получения данных пользователя по его ID.
  * Поиск пользователя производится в базе данных по ID, полученному из
@@ -187,7 +207,10 @@ export const modifyUser = (
   userModel.findByIdAndUpdate(
     req.user._id,
     updateData,
-    { new: true },
+    {
+      new: true,
+      runValidators: true,
+    },
   )
     .orFail(new NotFoundError())
     .then((updatedProfile) => {
