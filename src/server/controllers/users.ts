@@ -27,6 +27,7 @@ import {
   JWT_EXPIRATION_TIME,
   RES_CREATED_CODE,
 } from '../constants/common';
+import ValidationError from '../errors/validation-error';
 
 /**
  * Асинхронный обработчик для создания нового пользователя.
@@ -179,6 +180,43 @@ export const getUserById = (
     .orFail(new NotFoundError(USER_NOT_FOUND_ERROR_MESSAGE))
     .then((userData) => {
       res.send(userData);
+    })
+    .catch((error) => {
+      if (error instanceof MongooseError) {
+        handleMongooseError(error, next);
+      } else {
+        next(error);
+      }
+    });
+};
+export const updateAvatar = (
+  req: RequestOrRequestWithJwt,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (!isValidJwsUserSignature(req.user)) {
+    next(new NotAuthorizedError());
+    return;
+  }
+
+  if (!req.body.avatar) {
+    next(new ValidationError('Поле avatar должно быть заполнено'));
+    return;
+  }
+
+  const updateData: Pick<IUser, 'avatar'> = { avatar: req.body.avatar };
+
+  userModel.findByIdAndUpdate(
+    req.user._id,
+    updateData,
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+    .orFail(new NotFoundError())
+    .then((updatedProfile) => {
+      res.send(updatedProfile);
     })
     .catch((error) => {
       if (error instanceof MongooseError) {

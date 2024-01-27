@@ -48,7 +48,6 @@ export const VALIDATE_USER_PROFILE_PATCH = celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: VALIDATE_USER_NAME,
     about: VALIDATE_USER_ABOUT,
-    avatar: VALIDATE_URL,
   }).min(USER_CHANGE_PARAMS_MIN_LENGTH),
 });
 

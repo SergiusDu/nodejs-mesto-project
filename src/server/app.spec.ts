@@ -122,7 +122,7 @@ describe('API Endpoints', () => {
   it(`PATCH ${USER_PROFILE_ENDPOINT} должен обновлять профиль пользователя`, async () => {
     const userUpdateResponse = await axios.patch(
       `${BASE_URL}${USER_PROFILE_ENDPOINT}`,
-      { avatar: 'https://example.com/new-avatar.jpg', name: 'Новое имя', about: 'Что-то новое о себе' },
+      { name: 'Новое имя', about: 'Что-то новое о себе' },
       {
         headers: {
           Cookie: cookies.join('; '),

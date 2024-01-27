@@ -49,12 +49,5 @@ export const VALIDATE_DELETE_LIKE = celebrate(
     [Segments.PARAMS]: Joi.object().keys({
       cardId: VALIDATE_MONGOOSE_ID.required(),
     }),
-    [Segments.BODY]: Joi.object().keys(
-      {
-        user: Joi.object().keys({
-          _id: VALIDATE_MONGOOSE_ID.required(),
-        }),
-      },
-    ),
   },
 );

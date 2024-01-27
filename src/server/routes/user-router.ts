@@ -5,6 +5,7 @@ import {
   getProfileData,
   getUserById,
   modifyUser,
+  updateAvatar,
 } from '../controllers/users';
 import {
   USER_CHANGE_AVATAR_ROUTE,
@@ -47,7 +48,7 @@ userRouter.patch(
 userRouter.patch(
   USER_CHANGE_AVATAR_ROUTE,
   VALIDATE_USER_AVATAR_PATCH,
-  modifyUser,
+  updateAvatar,
 );
 
 userRouter.delete(
